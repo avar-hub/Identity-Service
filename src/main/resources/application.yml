@@ -1,0 +1,17 @@
+server:
+  port: 6969
+
+spring:
+  application:
+    name: Identity-Service
+
+#How to put password and username from enviroment ???
+  datasource:
+    url: jdbc:mysql://localhost:3306/socials_user
+    username: root
+    password: admin
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+      show-sql: true
