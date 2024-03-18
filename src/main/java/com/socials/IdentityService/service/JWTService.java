@@ -5,6 +5,7 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -18,11 +19,14 @@ import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class JWTService {
 
     private final AuthenticationManager authenticationManager;
     private static final String SECRET= "43d7640272c961817cbe57f9811a776dfde782048b35644ac1732778ea958806";
     public String generateToken(AuthRequest authRequest){
+
+        log.info("In generateToken service of username : {}", authRequest.getEmail());
         Authentication authentication= authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(authRequest.getEmail(),authRequest.getPassword()));
         if(authentication.isAuthenticated())
         {
@@ -34,6 +38,8 @@ public class JWTService {
     }
 
     public String createToken(Map<String,Object> claims , String userName){
+
+        log.info("In createToken service of username : {}", userName);
         return Jwts.builder()
                 .setClaims(claims)
                 .setSubject(userName)

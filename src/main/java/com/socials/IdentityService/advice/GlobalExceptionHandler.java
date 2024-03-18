@@ -1,5 +1,6 @@
 package com.socials.IdentityService.advice;
 
+import com.socials.IdentityService.exception.UserAlreadyExistsException;
 import com.socials.IdentityService.exception.UserNotCreatedException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -27,5 +28,11 @@ public class GlobalExceptionHandler {
             errorMap.put(error.getField(),error.getDefaultMessage());
         });
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorMap);
+    }
+
+    @ExceptionHandler(UserAlreadyExistsException.class)
+    public ResponseEntity<String> handleUserAlreadyExists(UserAlreadyExistsException exception){
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(exception.getMessage());
     }
 }
