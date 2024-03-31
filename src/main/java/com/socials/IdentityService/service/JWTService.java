@@ -1,6 +1,8 @@
 package com.socials.IdentityService.service;
 
 import com.socials.IdentityService.dto.AuthRequest;
+import com.socials.IdentityService.entity.UserCredential;
+import com.socials.IdentityService.repository.UserCredentialRepo;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
@@ -23,18 +25,22 @@ import java.util.Map;
 public class JWTService {
 
     private final AuthenticationManager authenticationManager;
+
+    private final UserCredentialRepo repo;
     private static final String SECRET= "43d7640272c961817cbe57f9811a776dfde782048b35644ac1732778ea958806";
     public String generateToken(AuthRequest authRequest){
 
         log.info("In generateToken service of username : {}", authRequest.getEmail());
-        Authentication authentication= authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(authRequest.getEmail(),authRequest.getPassword()));
-        if(authentication.isAuthenticated())
-        {
-            Map<String,Object> claims= new HashMap<>();
-            return createToken(claims,authRequest.getEmail());
+        if(repo.findByEmail(authRequest.getEmail()).get().getActive()) {
+            Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(authRequest.getEmail(), authRequest.getPassword()));
+            if (authentication.isAuthenticated()) {
+                Map<String, Object> claims = new HashMap<>();
+                return createToken(claims, authRequest.getEmail());
+            } else
+                throw new UsernameNotFoundException("User not found");
         }
         else
-            throw new UsernameNotFoundException("User not found");
+            return "Please validate email";
     }
 
     public String createToken(Map<String,Object> claims , String userName){

@@ -5,6 +5,21 @@ spring:
   application:
     name: Identity-Service
 
+#    For email services
+
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: avarmittal1sep@gmail.com
+    password: hgrtnrjqwdorexdh
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+
 #How to put password and username from enviroment ???
   datasource:
     url: jdbc:mysql://localhost:3306/socials_user

@@ -1,6 +1,7 @@
 package com.socials.IdentityService.controller;
 
 import com.socials.IdentityService.dto.AuthRequest;
+import com.socials.IdentityService.dto.UserCredentialDto;
 import com.socials.IdentityService.entity.UserCredential;
 import com.socials.IdentityService.service.JWTService;
 import com.socials.IdentityService.service.UserService;
@@ -25,11 +26,19 @@ public class UserController {
     private final AuthenticationManager authenticationManager;
 
     @PostMapping("/register")
-    public ResponseEntity<String> saveUser(@RequestBody @Valid UserCredential userCredential){
+    public ResponseEntity<String> saveUser(@RequestBody @Valid UserCredentialDto userCredential){
 
         log.info("In saveUser controller method of username : {}",userCredential.getEmail());
         return ResponseEntity.ok().body(userService.saveUser(userCredential));
     }
+
+    @PutMapping("/verify-account")
+    public ResponseEntity<String> verifyUser(@RequestParam String email, @RequestParam String otp){
+
+        log.info("In verify-account controller method of username : {}", email);
+        return ResponseEntity.ok().body(userService.verifyUser(email,otp));
+    }
+
 
     @GetMapping("/getToken")
     public ResponseEntity<String> getToken(@RequestBody AuthRequest authRequest){
