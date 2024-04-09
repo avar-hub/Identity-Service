@@ -55,4 +55,27 @@ public class UserService {
           return "Please signup again";
       }
     }
+
+    public String forgotPass(String email) {
+        String otp= otpUtil.generateOtp();
+        emailUtil.sentOtpEmail(email,otp);
+        UserCredential userCredential= repo.findByEmail(email).orElseThrow(()-> new UserNotCreatedException("User not found"));
+        UserCredential userCredential1= UserCredential.builder().id(userCredential.getId())
+                .email(email).otp(otp).otpGeneratedTime(LocalDateTime.now())
+                .password(userCredential.getPassword())
+                .build();
+        repo.save(userCredential1);
+        return "Please verify account";
+    }
+
+    public String resetPass(UserCredentialDto userCredentialDto) {
+        UserCredential userCredential= repo.findByEmail(userCredentialDto.getEmail()).orElseThrow(()-> new UserNotCreatedException("User not found"));
+        UserCredential userCredential1= UserCredential.builder().id(userCredential.getId())
+                .email(userCredentialDto.getEmail())
+                .password(encoder.encode(userCredentialDto.getPassword()))
+                .active(true)
+                .build();
+        repo.save(userCredential1);
+        return "Password changed";
+    }
 }

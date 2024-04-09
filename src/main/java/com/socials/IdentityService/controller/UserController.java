@@ -46,4 +46,18 @@ public class UserController {
         log.info("In getToken controller method of username : {}",authRequest.getEmail());
         return ResponseEntity.ok().body(jwtService.generateToken(authRequest));
     }
+
+    @GetMapping("/forgotPass")
+    public ResponseEntity<String> forgotPass(@RequestParam String email){
+
+        log.info("In forgotPass controller method of username : {}", email);
+        return ResponseEntity.ok().body(userService.forgotPass(email));
+    }
+
+    @PutMapping("/resetPass")
+    public ResponseEntity<String> resetPass(@RequestBody  UserCredentialDto userCredentialDto){
+
+        log.info("In resetPass controller method of username : {}", userCredentialDto.getEmail());
+        return ResponseEntity.ok().body(userService.resetPass(userCredentialDto));
+    }
 }
