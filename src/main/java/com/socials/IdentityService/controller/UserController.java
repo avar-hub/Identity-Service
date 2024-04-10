@@ -1,9 +1,13 @@
 package com.socials.IdentityService.controller;
 
 import com.socials.IdentityService.dto.AuthRequest;
+import com.socials.IdentityService.dto.JWTResponse;
+import com.socials.IdentityService.dto.RefreshTokenDto;
 import com.socials.IdentityService.dto.UserCredentialDto;
+import com.socials.IdentityService.entity.RefreshToken;
 import com.socials.IdentityService.entity.UserCredential;
 import com.socials.IdentityService.service.JWTService;
+import com.socials.IdentityService.service.RefreshTokenService;
 import com.socials.IdentityService.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +29,9 @@ public class UserController {
 
     private final AuthenticationManager authenticationManager;
 
+    private final RefreshTokenService refreshTokenService;
+
+
     @PostMapping("/register")
     public ResponseEntity<String> saveUser(@RequestBody @Valid UserCredentialDto userCredential){
 
@@ -41,7 +48,7 @@ public class UserController {
 
 
     @GetMapping("/getToken")
-    public ResponseEntity<String> getToken(@RequestBody AuthRequest authRequest){
+    public ResponseEntity<JWTResponse> getToken(@RequestBody AuthRequest authRequest){
 
         log.info("In getToken controller method of username : {}",authRequest.getEmail());
         return ResponseEntity.ok().body(jwtService.generateToken(authRequest));
@@ -59,5 +66,23 @@ public class UserController {
 
         log.info("In resetPass controller method of username : {}", userCredentialDto.getEmail());
         return ResponseEntity.ok().body(userService.resetPass(userCredentialDto));
+    }
+
+    @PostMapping("/refreshToken")
+    public JWTResponse  refreshToken(@RequestBody RefreshTokenDto refreshTokenDto){
+
+        log.info("In refreshToken controller method of username");
+         return  refreshTokenService.findByToken(refreshTokenDto.getToken())
+                .map(refreshTokenService::verifyExpiry)
+                .map(RefreshToken::getUserCredential)
+                .map(userCredential -> {
+                    AuthRequest authRequest = new AuthRequest(userCredential.getEmail(),userCredential.getPassword());
+                    String accessToken= jwtService.generateToken(authRequest).getAccessToken();
+                    return JWTResponse.builder()
+                            .token(refreshTokenDto.getToken())
+                            .accessToken(accessToken)
+                            .build();
+                }).orElseThrow(()-> new RuntimeException("Refresh token not present"));
+
     }
 }
