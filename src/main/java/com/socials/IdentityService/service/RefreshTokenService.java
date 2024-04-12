@@ -21,19 +21,19 @@ public class RefreshTokenService {
 
     public RefreshToken createRefreshToken(String email){
         RefreshToken refreshToken= RefreshToken.builder()
+                .userCredential(userCredentialRepo.findByEmail(email).get())
                 .token(UUID.randomUUID().toString())
-                .expiryDate(Instant.now().plusMillis(600000))
-                .userCredential(userCredentialRepo.findByEmail(email)
-                        .orElseThrow(()-> new UserNotCreatedException("User not found")))
+                .expiryDate(Instant.now().plusMillis(1000*60*10))
                 .build();
-        return refreshToken;
+        return refreshTokenRepo.save(refreshToken);
     }
 
-    public RefreshToken verifyExpiry(RefreshToken refreshToken){
-        if(refreshToken.getExpiryDate().compareTo(Instant.now())<0){
-            throw new RuntimeException("Sign in again");
+    public RefreshToken verifyExpiry(RefreshToken token){
+        if (token.getExpiryDate().compareTo(Instant.now()) < 0) {
+            refreshTokenRepo.delete(token);
+            throw new RuntimeException(token.getToken() + " Refresh token was expired. Please make a new signin request");
         }
-        return refreshToken;
+        return token;
     }
 
     public Optional<RefreshToken> findByToken(String token) {

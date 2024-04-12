@@ -12,9 +12,15 @@ import com.socials.IdentityService.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
@@ -30,6 +36,8 @@ public class UserController {
     private final AuthenticationManager authenticationManager;
 
     private final RefreshTokenService refreshTokenService;
+
+    private final PasswordEncoder passwordEncoder;
 
 
     @PostMapping("/register")
@@ -51,7 +59,12 @@ public class UserController {
     public ResponseEntity<JWTResponse> getToken(@RequestBody AuthRequest authRequest){
 
         log.info("In getToken controller method of username : {}",authRequest.getEmail());
-        return ResponseEntity.ok().body(jwtService.generateToken(authRequest));
+        RefreshToken refreshToken= refreshTokenService.createRefreshToken(authRequest.getEmail());
+        JWTResponse jwtResponse= JWTResponse.builder()
+                .accessToken(jwtService.generateToken(authRequest))
+                .token(refreshToken.getToken()).build();
+         ResponseEntity.ok().body(jwtResponse);
+         return ResponseEntity.ok().body(jwtResponse);
     }
 
     @GetMapping("/forgotPass")
@@ -69,20 +82,21 @@ public class UserController {
     }
 
     @PostMapping("/refreshToken")
-    public JWTResponse  refreshToken(@RequestBody RefreshTokenDto refreshTokenDto){
+    public JWTResponse refreshToken(@RequestBody RefreshTokenDto refreshTokenRequest) {
 
-        log.info("In refreshToken controller method of username");
-         return  refreshTokenService.findByToken(refreshTokenDto.getToken())
+        log.info("In refreshToken controller method of token  : {}", refreshTokenRequest);
+
+        return refreshTokenService.findByToken(refreshTokenRequest.getToken())
                 .map(refreshTokenService::verifyExpiry)
                 .map(RefreshToken::getUserCredential)
-                .map(userCredential -> {
-                    AuthRequest authRequest = new AuthRequest(userCredential.getEmail(),userCredential.getPassword());
-                    String accessToken= jwtService.generateToken(authRequest).getAccessToken();
-                    return JWTResponse.builder()
-                            .token(refreshTokenDto.getToken())
-                            .accessToken(accessToken)
-                            .build();
-                }).orElseThrow(()-> new RuntimeException("Refresh token not present"));
-
+                .map(userInfo -> {
+                    AuthRequest authRequest= AuthRequest.builder()
+                            .email(userInfo.getEmail()).password(userInfo.getPassword()).build();
+                    JWTResponse jwtResponse = JWTResponse.builder()
+                            .accessToken(jwtService.createToken(new HashMap<>() ,userInfo.getEmail()))
+                            .token(refreshTokenRequest.getToken()).build();
+                    return jwtResponse;
+                }).orElseThrow(() -> new RuntimeException(
+                        "Refresh token is not in database!"));
     }
 }

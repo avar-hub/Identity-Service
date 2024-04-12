@@ -31,21 +31,15 @@ public class JWTService {
 
     private final RefreshTokenService refreshTokenService;
     private static final String SECRET= "43d7640272c961817cbe57f9811a776dfde782048b35644ac1732778ea958806";
-    public JWTResponse generateToken(AuthRequest authRequest){
+    public String generateToken(AuthRequest authRequest){
 
         log.info("In generateToken service of username : {}", authRequest.getEmail());
         if(repo.findByEmail(authRequest.getEmail()).get().getActive()) {
             Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(authRequest.getEmail(), authRequest.getPassword()));
             if (authentication.isAuthenticated()) {
+                log.info("User is authenticated now");
                 Map<String, Object> claims = new HashMap<>();
-                RefreshToken refreshToken= refreshTokenService.createRefreshToken(authRequest.getEmail());
-
-                // Here we are putting the Jwt token in access token and in token we are putting refresh token
-
-                return JWTResponse.builder()
-                        .accessToken(createToken(claims, authRequest.getEmail()))
-                        .token(refreshToken.getToken())
-                        .build();
+                return createToken(claims,authRequest.getEmail());
             } else
                 throw new UsernameNotFoundException("User not found");
         }
@@ -60,7 +54,7 @@ public class JWTService {
                 .setClaims(claims)
                 .setSubject(userName)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis()+1000*60*30))
+                .setExpiration(new Date(System.currentTimeMillis()+1000*60*3))
                 .signWith(getSigningKey())
                 .compact();
     }
