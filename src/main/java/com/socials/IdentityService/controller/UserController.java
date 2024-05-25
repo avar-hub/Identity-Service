@@ -26,6 +26,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 @RequestMapping("/auth")
 @Slf4j
+@CrossOrigin(origins = "http://localhost:4200")
 public class UserController {
 
 
@@ -41,7 +42,7 @@ public class UserController {
 
 
     @PostMapping("/register")
-    public ResponseEntity<String> saveUser(@RequestBody @Valid UserCredentialDto userCredential){
+    public ResponseEntity<UserCredentialDto> saveUser(@RequestBody @Valid UserCredentialDto userCredential){
 
         log.info("In saveUser controller method of username : {}",userCredential.getEmail());
         return ResponseEntity.ok().body(userService.saveUser(userCredential));

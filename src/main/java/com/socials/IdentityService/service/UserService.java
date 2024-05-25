@@ -29,7 +29,7 @@ public class UserService {
     private final EmailUtil emailUtil;
 
     private final PasswordEncoder encoder;
-    public String saveUser(UserCredentialDto userCredential) {
+    public UserCredentialDto saveUser(UserCredentialDto userCredential) {
 
         log.info("In saveUser service of username : {}",userCredential.getEmail());
         String otp= otpUtil.generateOtp();
@@ -41,7 +41,7 @@ public class UserService {
         UserCredential user= repo.save(userCredential1);
         if(user==null)
             throw new UserNotCreatedException("User not saved in database");
-        return "User Saved Successfully";
+        return userCredential;
     }
 
     public String verifyUser(String email, String otp) {
